@@ -1,9 +1,6 @@
 package org.apereo.cas.authentication.surrogate;
 
-import lombok.val;
-
 import org.apereo.cas.audit.spi.config.CasCoreAuditConfiguration;
-import org.apereo.cas.authentication.CoreAuthenticationTestUtils;
 import org.apereo.cas.config.CasCoreAuthenticationConfiguration;
 import org.apereo.cas.config.CasCoreAuthenticationHandlersConfiguration;
 import org.apereo.cas.config.CasCoreAuthenticationMetadataConfiguration;
@@ -20,7 +17,8 @@ import org.apereo.cas.config.CasCoreWebConfiguration;
 import org.apereo.cas.config.CasPersonDirectoryConfiguration;
 import org.apereo.cas.config.SurrogateJdbcAuthenticationConfiguration;
 import org.apereo.cas.config.support.CasWebApplicationServiceFactoryConfiguration;
-import org.junit.Test;
+
+import lombok.Getter;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +30,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.sql.DataSource;
-
-import static org.junit.Assert.*;
 
 /**
  * This is {@link SurrogateJdbcAuthenticationServiceTests}.
@@ -64,10 +60,11 @@ import static org.junit.Assert.*;
     SurrogateJdbcAuthenticationConfiguration.class
 })
 @TestPropertySource(locations = {"classpath:/surrogate-jdbc.properties"})
+@Getter
 public class SurrogateJdbcAuthenticationServiceTests {
     @Autowired
     @Qualifier("surrogateAuthenticationService")
-    private SurrogateAuthenticationService surrogateAuthenticationService;
+    private SurrogateAuthenticationService service;
 
     @Autowired
     @Qualifier("surrogateAuthenticationJdbcDataSource")
@@ -83,22 +80,5 @@ public class SurrogateJdbcAuthenticationServiceTests {
         jdbcTemplate.execute("insert into surrogate_accounts values (100, 'casuser', 'surrogate1');");
         jdbcTemplate.execute("insert into surrogate_accounts values (200, 'casuser', 'surrogate2');");
         jdbcTemplate.execute("insert into surrogate_accounts values (300, 'casuser', 'surrogate3');");
-    }
-
-
-    @Test
-    public void verifyAccountsQualifying() {
-        val results = surrogateAuthenticationService.getEligibleAccountsForSurrogateToProxy("casuser");
-        assertFalse(results.isEmpty());
-        assertEquals(3, results.size());
-    }
-
-    @Test
-    public void verifyAccountQualifying() {
-        val casuser = CoreAuthenticationTestUtils.getPrincipal("casuser");
-        val service = CoreAuthenticationTestUtils.getService();
-        assertTrue(surrogateAuthenticationService.canAuthenticateAs("surrogate1", casuser, service));
-        assertTrue(surrogateAuthenticationService.canAuthenticateAs("surrogate2", casuser, service));
-        assertTrue(surrogateAuthenticationService.canAuthenticateAs("surrogate3", casuser, service));
     }
 }

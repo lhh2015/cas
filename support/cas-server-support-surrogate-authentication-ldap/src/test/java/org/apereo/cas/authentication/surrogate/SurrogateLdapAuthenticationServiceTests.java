@@ -1,11 +1,6 @@
 package org.apereo.cas.authentication.surrogate;
 
-import lombok.val;
-
-import com.unboundid.ldap.sdk.LDAPConnection;
-import lombok.SneakyThrows;
 import org.apereo.cas.adaptors.ldap.LdapIntegrationTestsOperations;
-import org.apereo.cas.authentication.CoreAuthenticationTestUtils;
 import org.apereo.cas.category.LdapCategory;
 import org.apereo.cas.config.CasCoreAuthenticationConfiguration;
 import org.apereo.cas.config.CasCoreAuthenticationHandlersConfiguration;
@@ -36,11 +31,15 @@ import org.apereo.cas.util.junit.RunningContinuousIntegrationCondition;
 import org.apereo.cas.web.config.CasCookieConfiguration;
 import org.apereo.cas.web.flow.config.CasCoreWebflowConfiguration;
 import org.apereo.cas.web.flow.config.CasWebflowContextConfiguration;
+
+import com.unboundid.ldap.sdk.LDAPConnection;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.val;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,8 +48,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-
-import static org.junit.Assert.*;
 
 /**
  * This is {@link SurrogateLdapAuthenticationServiceTests}.
@@ -91,7 +88,8 @@ import static org.junit.Assert.*;
     SurrogateLdapAuthenticationConfiguration.class
 })
 @ConditionalIgnore(condition = RunningContinuousIntegrationCondition.class)
-public class SurrogateLdapAuthenticationServiceTests {
+@Getter
+public class SurrogateLdapAuthenticationServiceTests extends BaseSurrogateAuthenticationServiceTests {
 
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -106,21 +104,7 @@ public class SurrogateLdapAuthenticationServiceTests {
 
     @Autowired
     @Qualifier("surrogateAuthenticationService")
-    private SurrogateAuthenticationService surrogateAuthenticationService;
-
-    @Test
-    public void verifyAccountsQualifying() {
-        val results = surrogateAuthenticationService.getEligibleAccountsForSurrogateToProxy("casuser");
-        assertFalse(results.isEmpty());
-    }
-
-    @Test
-    public void verifyAccountQualifying() {
-        val result = surrogateAuthenticationService.canAuthenticateAs("cassurrogate",
-            CoreAuthenticationTestUtils.getPrincipal("casuser"),
-            CoreAuthenticationTestUtils.getService());
-        assertTrue(result);
-    }
+    private SurrogateAuthenticationService service;
 
     @BeforeClass
     @SneakyThrows

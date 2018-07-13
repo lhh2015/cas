@@ -1,10 +1,5 @@
 package org.apereo.cas.authentication.surrogate;
 
-import lombok.val;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apereo.cas.authentication.CoreAuthenticationTestUtils;
 import org.apereo.cas.config.CasCoreAuthenticationConfiguration;
 import org.apereo.cas.config.CasCoreAuthenticationHandlersConfiguration;
 import org.apereo.cas.config.CasCoreAuthenticationMetadataConfiguration;
@@ -30,12 +25,19 @@ import org.apereo.cas.logout.config.CasCoreLogoutConfiguration;
 import org.apereo.cas.services.web.config.CasThemesConfiguration;
 import org.apereo.cas.util.CollectionUtils;
 import org.apereo.cas.util.MockWebServer;
-import org.apereo.cas.util.junit.ConditionalSpringRunner;
+import org.apereo.cas.util.junit.ConditionalIgnoreRule;
 import org.apereo.cas.web.config.CasCookieConfiguration;
 import org.apereo.cas.web.flow.config.CasCoreWebflowConfiguration;
 import org.apereo.cas.web.flow.config.CasWebflowContextConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.val;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,10 +45,10 @@ import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import java.nio.charset.StandardCharsets;
-
-import static org.junit.Assert.*;
 
 /**
  * This is {@link SurrogateRestAuthenticationServiceTests}.
@@ -54,7 +56,6 @@ import static org.junit.Assert.*;
  * @author Misagh Moayyed
  * @since 5.3.0
  */
-@RunWith(ConditionalSpringRunner.class)
 @SpringBootTest(classes = {
     RefreshAutoConfiguration.class,
     CasCoreAuthenticationPrincipalConfiguration.class,
@@ -86,35 +87,36 @@ import static org.junit.Assert.*;
     SurrogateRestAuthenticationConfiguration.class
 })
 @TestPropertySource(properties = "cas.authn.surrogate.rest.url=http://localhost:9293")
-public class SurrogateRestAuthenticationServiceTests {
+@Getter
+public class SurrogateRestAuthenticationServiceTests extends BaseSurrogateAuthenticationServiceTests {
+    @ClassRule
+    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
     private static final ObjectMapper MAPPER = new ObjectMapper()
         .findAndRegisterModules()
         .configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    @Rule
+    public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+    @Rule
+    public final ConditionalIgnoreRule conditionalIgnoreRule = new ConditionalIgnoreRule();
+
     @Autowired
     @Qualifier("surrogateAuthenticationService")
-    private SurrogateAuthenticationService surrogateAuthenticationService;
+    private SurrogateAuthenticationService service;
 
-    @Test
-    public void verifyAccountsQualifying() throws Exception {
+    private MockWebServer webServer;
+
+    @BeforeClass
+    @SneakyThrows
+    public void initTests() {
         val data = MAPPER.writeValueAsString(CollectionUtils.wrapList("casuser", "otheruser"));
         try (val webServer = new MockWebServer(9293,
             new ByteArrayResource(data.getBytes(StandardCharsets.UTF_8), "REST Output"), MediaType.APPLICATION_JSON_VALUE)) {
-            webServer.start();
-            val results = surrogateAuthenticationService.getEligibleAccountsForSurrogateToProxy("casuser");
-            assertFalse(results.isEmpty());
-        } catch (final Exception e) {
-            throw new AssertionError(e.getMessage(), e);
-        }
-
-        try (val webServer = new MockWebServer(9293,
-            new ByteArrayResource(data.getBytes(StandardCharsets.UTF_8), "REST Output"), MediaType.APPLICATION_JSON_VALUE)) {
-            webServer.start();
-            val result = surrogateAuthenticationService.canAuthenticateAs("cassurrogate",
-                CoreAuthenticationTestUtils.getPrincipal("casuser"),
-                CoreAuthenticationTestUtils.getService());
-            assertTrue(result);
+            this.webServer = webServer;
+            this.webServer.start();
         } catch (final Exception e) {
             throw new AssertionError(e.getMessage(), e);
         }
