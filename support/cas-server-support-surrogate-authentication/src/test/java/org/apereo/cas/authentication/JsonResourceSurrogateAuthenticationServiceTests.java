@@ -1,14 +1,12 @@
 package org.apereo.cas.authentication;
 
-import lombok.val;
-
 import org.apereo.cas.authentication.surrogate.JsonResourceSurrogateAuthenticationService;
-import org.apereo.cas.services.ServicesManager;
+
+import lombok.val;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 /**
  * This is {@link JsonResourceSurrogateAuthenticationServiceTests}.
@@ -20,16 +18,14 @@ public class JsonResourceSurrogateAuthenticationServiceTests {
     @Test
     public void verifyList() throws Exception {
         val resource = new ClassPathResource("surrogates.json");
-        val mgr = mock(ServicesManager.class);
-        val r = new JsonResourceSurrogateAuthenticationService(resource, mgr);
+        val r = new JsonResourceSurrogateAuthenticationService(resource);
         assertFalse(r.getEligibleAccountsForSurrogateToProxy("casuser").isEmpty());
     }
 
     @Test
     public void verifyProxying() throws Exception {
         val resource = new ClassPathResource("surrogates.json");
-        val mgr = mock(ServicesManager.class);
-        val r = new JsonResourceSurrogateAuthenticationService(resource, mgr);
+        val r = new JsonResourceSurrogateAuthenticationService(resource);
         assertTrue(r.canAuthenticateAs("banderson", CoreAuthenticationTestUtils.getPrincipal("casuser"),
             CoreAuthenticationTestUtils.getService()));
     }

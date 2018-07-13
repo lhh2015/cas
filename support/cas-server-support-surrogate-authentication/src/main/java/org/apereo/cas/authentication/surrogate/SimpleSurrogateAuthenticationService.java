@@ -1,11 +1,10 @@
 package org.apereo.cas.authentication.surrogate;
 
-import lombok.val;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.authentication.principal.Service;
-import org.apereo.cas.services.ServicesManager;
+
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.List;
 import java.util.Map;
@@ -24,10 +23,8 @@ public class SimpleSurrogateAuthenticationService extends BaseSurrogateAuthentic
      * Instantiates a new simple surrogate username password service.
      *
      * @param eligibleAccounts the eligible accounts
-     * @param servicesManager  the services manager
      */
-    public SimpleSurrogateAuthenticationService(final Map<String, List> eligibleAccounts, final ServicesManager servicesManager) {
-        super(servicesManager);
+    public SimpleSurrogateAuthenticationService(final Map<String, List> eligibleAccounts) {
         this.eligibleAccounts = eligibleAccounts;
     }
 

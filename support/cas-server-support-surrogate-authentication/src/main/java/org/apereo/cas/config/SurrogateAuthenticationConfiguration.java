@@ -1,9 +1,5 @@
 package org.apereo.cas.config;
 
-import lombok.val;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.audit.AuditPrincipalIdProvider;
 import org.apereo.cas.audit.AuditableExecution;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
@@ -27,6 +23,10 @@ import org.apereo.cas.ticket.ExpirationPolicy;
 import org.apereo.cas.ticket.support.HardTimeoutExpirationPolicy;
 import org.apereo.cas.ticket.support.SurrogateSessionExpirationPolicy;
 import org.apereo.cas.util.io.CommunicationsManager;
+
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apereo.services.persondir.IPersonAttributeDao;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,12 +105,12 @@ public class SurrogateAuthenticationConfiguration {
         val su = casProperties.getAuthn().getSurrogate();
         if (su.getJson().getLocation() != null) {
             LOGGER.debug("Using JSON resource [{}] to locate surrogate accounts", su.getJson().getLocation());
-            return new JsonResourceSurrogateAuthenticationService(su.getJson().getLocation(), servicesManager);
+            return new JsonResourceSurrogateAuthenticationService(su.getJson().getLocation());
         }
         val accounts = new HashMap<String, List>();
         su.getSimple().getSurrogates().forEach((k, v) -> accounts.put(k, new ArrayList<>(StringUtils.commaDelimitedListToSet(v))));
         LOGGER.debug("Using accounts [{}] for surrogate authentication", accounts);
-        return new SimpleSurrogateAuthenticationService(accounts, servicesManager);
+        return new SimpleSurrogateAuthenticationService(accounts);
     }
 
     @RefreshScope
